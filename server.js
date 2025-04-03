@@ -115,32 +115,22 @@ function createCandlestickChart(candles, symbol, timeframe) {
     // رسم بک‌گراند رنگی برای قیمت
     // رسم بک‌گراند رنگی برای قیمت
     ctx.fillStyle = "#222222";
-    ctx.fillRect(width / 2 - 150, height - 110, 300, 80);
+    ctx.fillRect(width / 2 - 150, height - 100, 300, 80);
 
 // قیمت لحظه‌ای + USDT
     ctx.fillStyle = priceColor;
     ctx.font = "bold 40px Arial";
     ctx.textAlign = "center";
     ctx.fillText(`${lastClose.toFixed(decimalPlaces)} USDT`, width / 2, height - 70);
-
-// ایجاد فاصله برای متن زیرین
-    const gap = 30;  // فاصله بین قیمت لحظه‌ای و متن پایین
+    
 
 // نمایش نام کاربری در پایین تصویر (با فاصله مناسب)
     ctx.fillStyle = "#FFFFFF";  // رنگ سفید برای متن پایین
     ctx.font = "bold 18px Arial";
     ctx.textAlign = "center"; // تنظیم ترازبندی به مرکز
-
-// نمایش متن "developer : Ehsan Fazli   |   id: @abj0o" به صورت یکدست
-    const developerText = "developer : Ehsan Fazli";
-    const developerTextWidth = ctx.measureText(developerText).width;
-    ctx.fillStyle = "#FFD700"; // رنگ طلایی برای نام توسعه‌دهنده
-    ctx.fillText(developerText, width / 2 - developerTextWidth / 2, height - gap - 10); // استفاده از فاصله
-
-// تغییر نام متغیر برای آیدی به avoid duplication
-    const developerIdText = "id: @abj0o"; // تغییر نام از 'idText' به 'developerIdText'
-    ctx.fillStyle = "#FFFFFF";  // رنگ سفید برای آیدی
-    ctx.fillText(developerIdText, width / 2, height - gap + 20); // تنظیم متن آیدی با فاصله مناسب
+    ctx.fillStyle = textColor;
+    ctx.font = "bold 18px Arial";
+    ctx.fillText("developer:Ehsan Fazli | ID : @abj0o", width / 2, height - 25);
     return canvas.toBuffer("image/png");
 }
 
