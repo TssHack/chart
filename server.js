@@ -103,10 +103,9 @@ function createCandlestickChart(candles, symbol, timeframe) {
     }
 
     // عنوان نمودار
-    ctx.addFont('path/to/NotoColorEmoji.ttf', 'emojiFont');
-    ctx.font = 'bold 24px emojiFont';
+    ctx.font = "bold 24px Arial";
     ctx.textAlign = "left";
-    ctx.fillText(`📊 Arz: ${symbol} | timeframe: ${timeframe}`, paddingLeft, 50);
+    ctx.fillText(`(: Arz: ${symbol} | timeframe: ${timeframe}`, paddingLeft, 50);
 
     // 🔥 **نمایش قیمت لحظه‌ای در پایین نمودار**
     const lastClose = parseFloat(candles[candles.length - 1][4]);
