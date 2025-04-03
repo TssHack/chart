@@ -1,0 +1,17 @@
+{
+  "name": "chart-server",
+  "version": "1.0.0",
+  "description": "A server to fetch and display candlestick charts using Bitget API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.8.4",
+    "canvas": "^2.8.0",
+    "chart.js": "^3.9.0",
+    "express": "^4.18.2"
+  },
+  "author": "Your Name",
+  "license": "ISC"
+}
