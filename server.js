@@ -1,12 +1,12 @@
 const express = require("express");
 const axios = require("axios");
 const { createCanvas } = require("canvas");
-const moment = require("moment");
+const moment = require("moment-timezone");
 
 const app = express();
 const PORT = 3000;
 
-// تابع دریافت داده‌های کندل استیک از Binance
+// دریافت داده‌های کندل استیک از Binance
 async function fetchCandlesData(symbol, timeframe) {
     const limit = 120;
     const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${timeframe}&limit=${limit}`;
@@ -19,7 +19,7 @@ async function fetchCandlesData(symbol, timeframe) {
     }
 }
 
-// تابع ساخت نمودار کندل استیک
+// رسم نمودار کندل استیک
 function createCandlestickChart(candles, symbol, timeframe) {
     const width = 1000, height = 600;
     const paddingLeft = 90, paddingRight = 40, paddingTop = 50, paddingBottom = 120;
@@ -89,11 +89,11 @@ function createCandlestickChart(candles, symbol, timeframe) {
         ctx.fillRect(x + 2, Math.min(yOpen, yClose), barWidth - 4, Math.abs(yOpen - yClose));
     });
 
-    // نمایش زمان در پایین نمودار
+    // نمایش زمان در پایین نمودار (به وقت تهران)
     const timeInterval = 10;
     ctx.font = "12px Arial";
     for (let i = 0; i < candles.length; i += timeInterval) {
-        const time = moment(candles[i][0]).format("HH:mm");
+        const time = moment(candles[i][0]).tz("Asia/Tehran").format("HH:mm");
         const x = paddingLeft + i * barWidth + barWidth / 4;
         ctx.fillText(time, x, height - paddingBottom + 20);
     }
@@ -102,14 +102,15 @@ function createCandlestickChart(candles, symbol, timeframe) {
     ctx.font = "18px Arial";
     ctx.fillText(`Symbol: ${symbol} | Interval: ${timeframe}`, paddingLeft, 30);
 
-    // نمایش نام کاربری در پایین تصویر
+    // نمایش اطلاعات توسعه‌دهنده
     ctx.font = "bold 16px Arial";
+    ctx.fillText("dev: ehsan fazli", width / 2 - 60, height - 40);
     ctx.fillText("@abj0o", width / 2 - 40, height - 20);
 
     return canvas.toBuffer("image/png");
 }
 
-// مسیر API برای نمایش مستقیم تصویر نمودار
+// مسیر API برای نمایش نمودار کندل استیک
 app.get("/chart", async (req, res) => {
     const symbol = req.query.symbol?.toUpperCase() || "BTCUSDT";
     const timeframe = req.query.timeframe || "1h";
