@@ -1,49 +1,92 @@
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-const { exec } = require("child_process");
+const express = require('express');
+const axios = require('axios');
+const { createCanvas } = require('canvas');
+const Chart = require('chart.js');
 
 const app = express();
-const PORT = 3000;
+const port = 3000;
 
-app.use(cors());
-
-// دریافت نمودار شمعی
-app.get("/candlestick", async (req, res) => {
-  const symbol = req.query.symbol || "BTCUSDT";
-  const timeframe = req.query.timeframe || "1h";
-
+// تنظیمات برای گرفتن داده‌ها از API
+const getDataFromAPI = async () => {
+  const url = 'https://api.bitget.com/api/v2/spot/market/candles?symbol=BTCUSDT&granularity=1h&limit=100';
   try {
-    const response = await axios.get(
-      `https://api.getbit.com/v1/candlestick?symbol=${symbol}&timeframe=${timeframe}`
-    );
-
-    const data = response.data;
-    if (!data || data.length === 0) {
-      return res.status(500).json({ error: "داده‌ای برای نمایش موجود نیست." });
-    }
-
-    // ذخیره داده‌ها در فایل JSON برای پردازش در پایتون
-    const fs = require("fs");
-    fs.writeFileSync("candlestick_data.json", JSON.stringify(data));
-
-    // اجرای اسکریپت پایتون برای رسم نمودار
-    exec("python3 generate_chart.py", (error) => {
-      if (error) {
-        console.error("خطا در تولید نمودار:", error);
-        return res.status(500).json({ error: "خطا در تولید نمودار." });
-      }
-      
-      // ارسال تصویر چارت به کاربر
-      res.sendFile(__dirname + "/candlestick_chart.png");
-    });
+    const response = await axios.get(url);
+    return response.data.data; // فرض می‌کنیم داده‌ها در response.data.data هستند
   } catch (error) {
-    console.error("خطا در دریافت داده‌ها:", error);
-    res.status(500).json({ error: "خطا در دریافت داده‌ها." });
+    console.error('Error fetching data from API:', error);
+    return [];
   }
+};
+
+// ساخت چارت شمعی و ارسال تصویر به کاربر
+app.get('/chart', async (req, res) => {
+  const data = await getDataFromAPI();
+
+  if (data.length === 0) {
+    return res.status(500).json({ error: 'خطا در دریافت داده‌ها' });
+  }
+
+  // داده‌ها برای چارت
+  const labels = data.map(item => new Date(item[0]).toLocaleString()); // زمان
+  const openData = data.map(item => item[1]); // قیمت افتتاحیه
+  const highData = data.map(item => item[2]); // قیمت بیشترین
+  const lowData = data.map(item => item[3]); // قیمت کمترین
+  const closeData = data.map(item => item[4]); // قیمت بسته‌شده
+
+  // ایجاد یک canvas برای چارت
+  const canvas = createCanvas(800, 400);
+  const ctx = canvas.getContext('2d');
+
+  // ساخت چارت با استفاده از Chart.js
+  const chart = new Chart(ctx, {
+    type: 'candlestick',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'BTC/USDT',
+        data: data.map((item, index) => ({
+          t: new Date(item[0]),
+          o: openData[index],
+          h: highData[index],
+          l: lowData[index],
+          c: closeData[index]
+        })),
+        borderColor: '#4BC0C0',
+        borderWidth: 1,
+        backgroundColor: '#FFFFFF',
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          type: 'time',
+          time: {
+            unit: 'minute'
+          }
+        },
+        y: {
+          ticks: {
+            beginAtZero: false
+          }
+        }
+      }
+    }
+  });
+
+  // ارسال تصویر چارت به کاربر
+  res.set('Content-Type', 'image/png');
+  canvas.toBuffer((err, buffer) => {
+    if (err) {
+      res.status(500).send('خطا در تولید تصویر');
+    } else {
+      res.send(buffer);
+    }
+  });
 });
 
-// راه‌اندازی سرور
-app.listen(PORT, () => {
-  console.log(`سرور روی پورت ${PORT} اجرا شد.`);
+// شروع سرور
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
