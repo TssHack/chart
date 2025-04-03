@@ -103,9 +103,10 @@ function createCandlestickChart(candles, symbol, timeframe) {
     }
 
     // عنوان نمودار
-    ctx.font = "bold 24px Arial";
+    ctx.addFont('path/to/NotoColorEmoji.ttf', 'emojiFont');
+    ctx.font = 'bold 24px emojiFont';
     ctx.textAlign = "left";
-    ctx.fillText(`📊 Symbol: ${symbol} | Interval: ${timeframe}`, paddingLeft, 50);
+    ctx.fillText(`📊 Arz: ${symbol} | timeframe: ${timeframe}`, paddingLeft, 50);
 
     // 🔥 **نمایش قیمت لحظه‌ای در پایین نمودار**
     const lastClose = parseFloat(candles[candles.length - 1][4]);
@@ -113,7 +114,7 @@ function createCandlestickChart(candles, symbol, timeframe) {
 
     // پس‌زمینه‌ی قیمت لحظه‌ای
     ctx.fillStyle = "#222222";
-    ctx.fillRect(width / 2 - 150, height - 120, 300, 80);
+    ctx.fillRect(width / 2 - 150, height - 140, 300, 80);
 
     // قیمت لحظه‌ای + USDT
     ctx.fillStyle = priceColor;
@@ -124,8 +125,21 @@ function createCandlestickChart(candles, symbol, timeframe) {
     // نمایش نام کاربری در پایین تصویر (با فاصله مناسب)
     ctx.fillStyle = textColor;
     ctx.font = "bold 18px Arial";
-    ctx.fillText("@abj0o", width / 2, height - 25);
+    ctx.textAlign = "center"; // تنظیم ترازبندی به مرکز
 
+// نمایش متن "developer : Ehsan Fazli   |   id: @abj0o" به صورت یکدست
+    const text = "developer : Ehsan Fazli   |   id: @abj0o";
+
+// تنظیم رنگ طلایی برای قسمت "developer : Ehsan Fazli"
+    const developerText = "developer : Ehsan Fazli";
+    const developerTextWidth = ctx.measureText(developerText).width;
+    ctx.fillStyle = "#FFD700"; // رنگ طلایی برای نام توسعه‌دهنده
+    ctx.fillText(developerText, width / 2 - developerTextWidth / 2, height - 30);
+
+// تنظیم رنگ آبی برای قسمت "id: @abj0o"
+    const idText = "id: @abj0o";
+    ctx.fillStyle = "#00BFFF"; // رنگ آبی برای آیدی
+    ctx.fillText(idText, width / 2 + developerTextWidth / 2 + 20, height - 30);
     return canvas.toBuffer("image/png");
 }
 
