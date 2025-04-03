@@ -105,24 +105,28 @@ function createCandlestickChart(candles, symbol, timeframe) {
     // عنوان نمودار
     ctx.font = "bold 24px Arial";
     ctx.textAlign = "left";
-    ctx.fillText(`(: Arz: ${symbol} | timeframe: ${timeframe}`, paddingLeft, 50);
+    ctx.fillText(`🧿 symbol: ${symbol} | timeframe: ${timeframe}`, paddingLeft, 50);
 
     // 🔥 **نمایش قیمت لحظه‌ای در پایین نمودار**
     const lastClose = parseFloat(candles[candles.length - 1][4]);
     const priceColor = lastClose >= parseFloat(candles[candles.length - 1][1]) ? greenColor : redColor;
 
     // پس‌زمینه‌ی قیمت لحظه‌ای
+    // رسم بک‌گراند رنگی برای قیمت
     ctx.fillStyle = "#222222";
-    ctx.fillRect(width / 2 - 150, height - 140, 300, 80);
+    ctx.fillRect(width / 2 - 150, height - 110, 300, 80);
 
-    // قیمت لحظه‌ای + USDT
+// قیمت لحظه‌ای + USDT
     ctx.fillStyle = priceColor;
     ctx.font = "bold 40px Arial";
     ctx.textAlign = "center";
     ctx.fillText(`${lastClose.toFixed(decimalPlaces)} USDT`, width / 2, height - 70);
 
-    // نمایش نام کاربری در پایین تصویر (با فاصله مناسب)
-    ctx.fillStyle = textColor;
+// ایجاد فاصله برای متن زیرین
+    const gap = 30;  // فاصله بین قیمت لحظه‌ای و متن پایین
+
+// نمایش نام کاربری در پایین تصویر (با فاصله مناسب)
+    ctx.fillStyle = "#FFFFFF";  // رنگ سفید برای متن پایین
     ctx.font = "bold 18px Arial";
     ctx.textAlign = "center"; // تنظیم ترازبندی به مرکز
 
@@ -133,8 +137,12 @@ function createCandlestickChart(candles, symbol, timeframe) {
     const developerText = "developer : Ehsan Fazli";
     const developerTextWidth = ctx.measureText(developerText).width;
     ctx.fillStyle = "#FFD700"; // رنگ طلایی برای نام توسعه‌دهنده
-    ctx.fillText(developerText, width / 2 - developerTextWidth / 2, height - 30);
+    ctx.fillText(developerText, width / 2 - developerTextWidth / 2, height - gap - 10); // استفاده از فاصله
 
+// نمایش id: @abj0o بعد از فاصله
+    const idText = "id: @abj0o";
+    ctx.fillStyle = "#FFFFFF";  // رنگ سفید برای آیدی
+    ctx.fillText(idText, width / 2, height - gap + 20); // تنظیم متن آیدی با فاصله مناسب
 // تنظیم رنگ آبی برای قسمت "id: @abj0o"
     const idText = "id: @abj0o";
     ctx.fillStyle = "#00BFFF"; // رنگ آبی برای آیدی
