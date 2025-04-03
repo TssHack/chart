@@ -6,6 +6,8 @@ const moment = require("moment");
 const app = express();
 const PORT = 3000;
 
+app.use(express.json());
+
 // دریافت داده‌های کندل از Binance
 async function fetchCandlesData(symbol, timeframe) {
     const limit = 100;
@@ -21,7 +23,7 @@ async function fetchCandlesData(symbol, timeframe) {
 
 // تابع رسم نمودار کندل‌استیک
 function createCandlestickChart(candles, symbol, timeframe) {
-    const width = 1280, height = 720; // رزولوشن بالا
+    const width = 1280, height = 720;
     const paddingLeft = 120, paddingRight = 60, paddingTop = 80, paddingBottom = 160;
     const chartWidth = width - paddingLeft - paddingRight;
     const chartHeight = height - paddingTop - paddingBottom;
@@ -106,23 +108,23 @@ function createCandlestickChart(candles, symbol, timeframe) {
     ctx.fillText(`📊 Symbol: ${symbol} | Interval: ${timeframe}`, paddingLeft, 50);
 
     // 🔥 **نمایش قیمت لحظه‌ای در پایین نمودار**
-    const lastClose = parseFloat(candles[candles.length - 1][4]); // آخرین قیمت بسته شدن
+    const lastClose = parseFloat(candles[candles.length - 1][4]);
     const priceColor = lastClose >= parseFloat(candles[candles.length - 1][1]) ? greenColor : redColor;
 
     // پس‌زمینه‌ی قیمت لحظه‌ای
     ctx.fillStyle = "#222222";
-    ctx.fillRect(width / 2 - 110, height - 100, 220, 70);
+    ctx.fillRect(width / 2 - 150, height - 120, 300, 80);
 
-    // قیمت لحظه‌ای
+    // قیمت لحظه‌ای + USDT
     ctx.fillStyle = priceColor;
-    ctx.font = "bold 36px Arial";
+    ctx.font = "bold 40px Arial";
     ctx.textAlign = "center";
-    ctx.fillText(lastClose.toFixed(decimalPlaces), width / 2, height - 55);
+    ctx.fillText(`${lastClose.toFixed(decimalPlaces)} USDT`, width / 2, height - 70);
 
-    // نمایش نام کاربری در پایین تصویر
-    ctx.font = "bold 20px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("@abj0o", width / 2, height - 20);
+    // نمایش نام کاربری در پایین تصویر (با فاصله مناسب)
+    ctx.fillStyle = textColor;
+    ctx.font = "bold 18px Arial";
+    ctx.fillText("@abj0o", width / 2, height - 25);
 
     return canvas.toBuffer("image/png");
 }
@@ -136,6 +138,23 @@ app.get("/chart", async (req, res) => {
     if (!candles) return res.status(500).json({ error: "❌ خطا در دریافت داده‌ها" });
 
     const chartBuffer = createCandlestickChart(candles, symbol, timeframe);
+
+    res.setHeader("Content-Type", "image/png");
+    res.send(chartBuffer);
+});
+
+// مسیر API برای دریافت نمودار از طریق `POST`
+app.post("/chart", async (req, res) => {
+    const { symbol, timeframe } = req.body;
+    
+    if (!symbol || !timeframe) {
+        return res.status(400).json({ error: "❌ لطفاً `symbol` و `timeframe` را ارسال کنید." });
+    }
+
+    const candles = await fetchCandlesData(symbol.toUpperCase(), timeframe);
+    if (!candles) return res.status(500).json({ error: "❌ خطا در دریافت داده‌ها" });
+
+    const chartBuffer = createCandlestickChart(candles, symbol.toUpperCase(), timeframe);
 
     res.setHeader("Content-Type", "image/png");
     res.send(chartBuffer);
