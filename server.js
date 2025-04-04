@@ -22,7 +22,7 @@ async function fetchCandlesData(symbol, timeframe) {
 }
 
 // تابع رسم نمودار کندل‌استیک
-function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan) {
+function createCandlestickChart(candles, symbol, timeframe) {
     const width = 1280, height = 720;
     const paddingLeft = 120, paddingRight = 60, paddingTop = 80, paddingBottom = 160;
     const chartWidth = width - paddingLeft - paddingRight;
@@ -31,32 +31,16 @@ function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
-    // 🎨 تنظیمات رنگ بر اساس تم انتخاب شده
-    const themes = {
-        dark: {
-            bgColor: "#191919",
-            gridColor: "#2E2E2E",
-            textColor: "#FFFFFF",
-            greenColor: "#0FFF0F",
-            redColor: "#FF0000"
-        },
-        light: {
-            bgColor: "#FFFFFF",
-            gridColor: "#CCCCCC",
-            textColor: "#000000",
-            greenColor: "#00AA00",
-            redColor: "#FF3333"
-        }
-    };
-    
-    const colors = themes[theme] || themes.dark;
+    // 🎨 رنگ‌ها
+    const bgColor = "#191919", gridColor = "#2E2E2E", textColor = "#FFFFFF";
+    const greenColor = "#0FFF0F", redColor = "#FF0000";
 
     // پس‌زمینه
-    ctx.fillStyle = colors.bgColor;
+    ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, width, height);
 
     // خطوط شبکه
-    ctx.strokeStyle = colors.gridColor;
+    ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
     const numGridLines = 10;
     for (let i = 0; i <= numGridLines; i++) {
@@ -74,7 +58,7 @@ function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan
     const decimalPlaces = maxPrice < 1 ? 6 : 2;
 
     // نمایش قیمت‌های محور Y
-    ctx.fillStyle = colors.textColor;
+    ctx.fillStyle = textColor;
     ctx.font = "18px Arial";
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
@@ -95,7 +79,7 @@ function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan
         const yLow = paddingTop + chartHeight - ((low - minPrice) / valueRange * chartHeight);
 
         // خط سایه (Wick)
-        ctx.strokeStyle = colors.textColor;
+        ctx.strokeStyle = textColor;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x + barWidth / 2, yHigh);
@@ -103,7 +87,7 @@ function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan
         ctx.stroke();
 
         // بدنه کندل
-        ctx.fillStyle = close >= open ? colors.greenColor : colors.redColor;
+        ctx.fillStyle = close >= open ? greenColor : redColor;
         ctx.fillRect(x, Math.min(yOpen, yClose), barWidth, Math.abs(yOpen - yClose));
     });
 
@@ -121,9 +105,7 @@ function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan
     // عنوان نمودار
     ctx.font = "bold 24px Arial";
     ctx.textAlign = "left";
-    const title = lan === "fa" ? `🧿 نماد: ${symbol} | تایم‌فریم: ${timeframe} | صرافی: ${exchange}` 
-                               : `🧿 Symbol: ${symbol} | Timeframe: ${timeframe} | Exchange: ${exchange}`;
-    ctx.fillText(title, paddingLeft, 50);
+    ctx.fillText(`🧿 symbol: ${symbol} | timeframe: ${timeframe}`, paddingLeft, 50);
 
     // 🔥 **نمایش قیمت لحظه‌ای در پایین نمودار**
     const lastClose = parseFloat(candles[candles.length - 1][4]);
@@ -152,36 +134,10 @@ function createCandlestickChart(candles, symbol, timeframe, exchange, theme, lan
     return canvas.toBuffer("image/png");
 }
 
-async function fetchSymbolInfo(symbol) {
-    const url = `https://api.mexc.com/api/v3/ticker/24hr?symbol=${symbol}`;
-
-    try {
-        const response = await axios.get(url);
-        const now = new Date().toISOString();
-
-        // بازگرداندن داده‌ها در قالب مورد نیاز
-        const data = response.data;
-        return {
-            symbol: data.symbol,
-            lastPrice: parseFloat(data.lastPrice),
-            highPrice: parseFloat(data.highPrice),
-            lowPrice: parseFloat(data.lowPrice),
-            priceChangePercent: parseFloat(data.priceChangePercent),
-            volume: parseFloat(data.volume),
-            updatedAt: now
-        };
-    } catch (error) {
-        console.error("❌ خطا در دریافت اطلاعات:", error.message);
-        return null;
-    }
-}
-
 // مسیر API برای دریافت نمودار
 app.get("/chart", async (req, res) => {
     const symbol = req.query.symbol?.toUpperCase() || "BTCUSDT";
     const timeframe = req.query.timeframe || "1h";
-    const theme = req.query.theme?.toLowerCase() || "dark";
-    const lan = req.query.lan?.toLowerCase() || "en";
 
     const candles = await fetchCandlesData(symbol, timeframe);
     if (!candles) return res.status(500).json({ error: "❌ خطا در دریافت داده‌ها" });
@@ -194,7 +150,7 @@ app.get("/chart", async (req, res) => {
 
 // مسیر API برای دریافت نمودار از طریق `POST`
 app.post("/chart", async (req, res) => {
-    const { symbol, timeframe, lan, theme } = req.body;
+    const { symbol, timeframe } = req.body;
     
     if (!symbol || !timeframe) {
         return res.status(400).json({ error: "❌ لطفاً `symbol` و `timeframe` را ارسال کنید." });
@@ -207,27 +163,6 @@ app.post("/chart", async (req, res) => {
 
     res.setHeader("Content-Type", "image/png");
     res.send(chartBuffer);
-});
-
-app.get("/arz", async (req, res) => {
-    const symbol = req.query.symbol?.toUpperCase();
-    const lan = req.query.lan?.toLowerCase() || "en";
-
-    if (!symbol) {
-        return res.status(400).json({
-            error: lan === "fa" ? "❌ لطفاً نماد ارز را ارسال کنید (symbol)." : "❌ Please provide a `symbol`."
-        });
-    }
-
-    const info = await fetchSymbolInfo(symbol);
-
-    if (!info) {
-        return res.status(500).json({
-            error: lan === "fa" ? "❌ خطا در دریافت اطلاعات ارز از صرافی." : "❌ Error fetching symbol info from exchange."
-        });
-    }
-
-    res.json(info);
 });
 
 // اجرای سرور
